@@ -10,7 +10,7 @@ ET - 8 часов,  AT - 4 часа
 
 let videoList = []; // массив с данными
 let $searchFormElement = $('#search-form');
-let elementCount = 3;
+let elementLimit = 3;
 
 // создаем событие отправки
 $searchFormElement.on('submit', function(event){
@@ -20,21 +20,24 @@ $searchFormElement.on('submit', function(event){
     value = value.trim();
     if (!value) return;
 
-    var request = $.ajax(`${server}/search?entity=musicVideo&term=${value}`);
+    var request = $.ajax(`${server}/search?entity=musicVideo&term=${value}&limit=${elementLimit}`);
     
     request.done(response => {
         let responseObj = JSON.parse(response);
         let $artistInfo = $('.artist-info');
         let $p = $('<p>');
         let $a = $('<a>');
+        let $carouselIndicators = $('.carousel-indicators');
         
         videoList = responseObj.results;
-        videoList.length = elementCount;
+        console.log(videoList);
+        //videoList.length = elementCount;
 
         // удалить предыдущие видео и данные
         if ($('.carousel-inner').find('div.item')) {
             $('.carousel-inner').find('div.item').remove();
             $artistInfo.empty();
+            $carouselIndicators.empty();
         }
 
         $artistInfo.css({
@@ -55,13 +58,25 @@ $searchFormElement.on('submit', function(event){
 
 
         // для каждого элемента из списка
-        videoList.forEach(video => {
-            //console.log(video);
+        videoList.forEach((video, index) => {
+            console.log(video);
 
             // клавный div для карусели
             let $divItem = $('<div>');
             let $divContainer = $('<div>');
             let $divCaption = $('<div>');
+
+            // создание точек-переключателей
+            $('<li>')
+                .attr({
+                    'data-target': '#myCarousel',
+                    'data-slide-to': index
+                })
+                .appendTo($carouselIndicators);
+
+            $carouselIndicators
+                .find('div:first-child')
+                .addClass('active'); 
 
             $divItem
                 .addClass('item')
@@ -82,7 +97,8 @@ $searchFormElement.on('submit', function(event){
                 })                
                 .appendTo($divContainer);
             
-            $('.carousel-inner').find('div.item').eq(0)
+            $('.carousel-inner')
+                .find('div:first-child')
                 .addClass('active');            
             
             $divCaption
@@ -103,57 +119,3 @@ $searchFormElement.on('submit', function(event){
 
 });
 
-
-//console.log($booksList.length);
-/*
-function sendRequest(queryString) {
-    var request = $.ajax(`${server}/search?entity=musicVideo&term=${queryString}&maxResults=3`);
-
-    request.done(response => {
-        //console.log('response', response);
-        booksList = response.items;
-        $booksListElement.empty();
-
-        booksList.forEach(book => {
-            //console.log(book);
-            $('<a>')
-                .attr('href', '')
-                .addClass('list-group-item')
-                .attr('data-id', book.id)
-                .text(book.volumeInfo.title)
-                .appendTo($booksListElement);
-        });
-
-    }).fail(error => {
-        console.error('error', error); // место где можно перехватить ошибку
-        alert(error.responseJSON.error.message);
-    });
-}
-*/
-
-/*
-$('body').on('click', '[data-id]', function(event) {
-    event.preventDefault();
-
-    let id = $(this).data('id');
-    // метод из ES6 find
-    let bookData = booksList.find(element => element.id === id);
-    console.log(bookData);
-
-    let $p = $('<p>').text(bookData.volumeInfo.description),
-        $a = $('<a>').attr('href', bookData.volumeInfo.previewLink).text('Read more ...').attr('target', 'blank');
-
-    $bookInfoElement
-        .hide()
-        .fadeIn(700)
-        .find('.book-heading')
-            .text(`${bookData.volumeInfo.title} | ${bookData.volumeInfo.authors.join(', ')} ( ${bookData.volumeInfo.publishedDate} )` )
-            .end() // конец и возврат на уровень выше
-        .find('.book-body')
-            .empty()
-            .append('<img class="pull-left" src="' + bookData.volumeInfo.imageLinks.smallThumbnail + '">')
-            .append($p)
-            .append($a); //ссылка на картинку
-    
-});
-*/
